@@ -1,0 +1,20 @@
+# Global configuration with settings and hyperparameters for prediction only!
+
+
+
+CrossSectionDetector:
+  model: # (str) path to model file
+  device: # (str) device: CUDA cuda:0 or cpu
+  iou: # (float) intersection over union (IoU) threshold for NMS
+  conf:  # (float, optional) object confidence threshold for detection (default 0.25 predict)
+  imgsz:  # (int) input images size 
+
+MaskGenerator: 
+  sam_chkpt: "weights/sam_vit_h.pth" # (str) Path to the SAM model checkpoint file
+  model_type: "vit_h" # (str) Model variant to use (e.g., vit_h, vit_l, vit_b)
+  device: "cuda:0" # (str) device: CUDA cuda:0 or cpu
+  multimask: true # (bool) Whether to return multiple masks per input (True/False)
+
+PolygonSimplifier:
+
+ParameterOptimizer:
