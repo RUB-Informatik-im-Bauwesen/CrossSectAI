@@ -112,15 +112,16 @@ def draw_bbox(img, bbox, color_hex, thickness=5, alpha=0.0):
     
     color_bgr = hex_to_bgr(color_hex)
     
-
+    
     x, y, w, h = bbox
+
         
     # Filled rectangle with transparency (optional)
     if alpha > 0.0:
-        cv2.rectangle(overlay, (x, y), (x + w, y + h), color_bgr, -1)
+        cv2.rectangle(overlay, (int(x), int(y)), (int(x + w), int(y + h)), color_bgr, -1)
         cv2.addWeighted(overlay, alpha, output_image, 1 - alpha, 0, output_image)
     
-    cv2.rectangle(output_image, (x, y), (x + w, y + h), color_bgr, thickness)
+    cv2.rectangle(output_image, (int(x), int(y)), (int(x + w), int(y + h)), color_bgr, thickness)
    
     return output_image
 

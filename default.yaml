@@ -1,20 +1,32 @@
 # Global configuration with settings and hyperparameters for prediction only!
 
+General:
+  bbox_color: "#17365C"
+  mask_color: "#5C1D17"
+  polygon_color: "#17365C"
+  final_polygon_color: "#D2DBA4"
 
 
 CrossSectionDetector:
-  model: # (str) path to model file
-  device: # (str) device: CUDA cuda:0 or cpu
-  iou: # (float) intersection over union (IoU) threshold for NMS
-  conf:  # (float, optional) object confidence threshold for detection (default 0.25 predict)
-  imgsz:  # (int) input images size 
+  model: "weights/yolov8m.pt" # (str) path to model file
+  device: "cuda:0" # (str) device: CUDA or cpu
+  iou: 0.7 # (float) intersection over union (IoU) threshold for NMS
+  conf: 0.25  # (float, optional) object confidence threshold for detection (default 0.25 predict)
+  imgsz: 640 # (int) input images size 
 
 MaskGenerator: 
   sam_chkpt: "weights/sam_vit_h.pth" # (str) Path to the SAM model checkpoint file
   model_type: "vit_h" # (str) Model variant to use (e.g., vit_h, vit_l, vit_b)
-  device: "cuda:0" # (str) device: CUDA cuda:0 or cpu
-  multimask: true # (bool) Whether to return multiple masks per input (True/False)
+  device: "cuda:1" # (str) device: CUDA or cpu
+  multimask: false # (bool) Whether to return multiple masks per input (True/False)
 
 PolygonSimplifier:
-
+  factor_arclength: 0.01
+  
 ParameterOptimizer:
+  weight_overlap: 1.0
+  weight_distance: 1.0
+  weight_aspect_ratio: 1.0
+  maxiter: 1000 # The maximum number of global search iterations. Default value is 1000.
+  initial_temp: 5230 # (float) The initial temperature, use higher values to facilitates a wider search o. Default value is 5230. 
+  

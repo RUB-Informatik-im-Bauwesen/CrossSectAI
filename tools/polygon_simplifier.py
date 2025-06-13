@@ -12,7 +12,7 @@ class PolygonSimplifier:
     
     def __init__(
         self,
-        factor_arclength: float = 0.01,
+        factor_arclength: float,
         approx_method: int = cv2.CHAIN_APPROX_NONE
     ):
         """
