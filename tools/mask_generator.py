@@ -1,5 +1,6 @@
 
 from segment_anything import SamPredictor
+from segment_anything import sam_model_registry
 
 class MaskGenerator(SamPredictor):
     """
@@ -14,25 +15,17 @@ class MaskGenerator(SamPredictor):
     Pretrained weights can be downloaded from:
     https://github.com/facebookresearch/segment-anything/blob/main/README.md#model-checkpoints
 
-    Parameters
-    ----------
-    sam_chkpt : str
-        Path to the SAM model checkpoint file.
-    model_type : str
-        Type of SAM model variant to use. Typically one of: "vit_h", "vit_l", "vit_b".
-    device : str
-        Torch device identifier, e.g. "cuda:0" or "cpu".
-    multimask : bool
-        If True, the generator will return multiple mask proposals per input.
+    Args:
+        sam_chkpt (str): Path to the SAM model checkpoint file.
+        model_type (str): Variant of the SAM model to initialize. Options include "vit_h", "vit_l", and "vit_b".
+        device (str): Torch device identifier, for example, "cuda:0" or "cpu".
     """
 
     def __init__(self, 
-                 sam_chkpt, 
-                 model_type, 
-                 device, 
+                 sam_chkpt: str, 
+                 model_type: str, 
+                 device: str, 
                 ):
-        
-        from segment_anything import sam_model_registry
         
         sam = sam_model_registry[model_type](checkpoint=sam_chkpt)
         sam.to(device=device)

@@ -14,11 +14,11 @@ CSECTIONS BEGIN
 		TEXT   ""
 		
 		CVARS BEGIN
-			VAR         "Parameter3"                       $P3  				LENGTH  ""
-			VAR         "Parameter4"                       $P4  				LENGTH  ""
-			VAR         "Parameter5"                       $P5  				LENGTH  ""
-			VAR         "Parameter6"                       $P6  				LENGTH  ""
-			VAR         "Parameter7_half"            	   [expr {$P7 / 2.0}]  	LENGTH  ""
+			VAR         "P3"                       $P3  				LENGTH  ""
+			VAR         "P4"                       $P4  				LENGTH  ""
+			VAR         "P5"                       $P5  				LENGTH  ""
+			VAR         "P6"                       $P6  				LENGTH  ""
+			VAR         "P7_h"            	   [expr {$P7 / 2.0}]  	LENGTH  ""
 			
 		CVARS END
 		
@@ -27,13 +27,13 @@ CSECTIONS BEGIN
 			ZAXIS       "Zloc"              0.00000      0.00000
 			YAXIS       "Yloc"              0.00000     90.00000
 			
-			PARALLEL    "L1"           "Parameter7_half"      POS  LINE   "Yloc"
-			PARALLEL    "L2"           "Parameter7_half"      NEG  LINE   "Yloc"
-			PARALLEL    "L3"           "Parameter6"           POS  LINE   "L1"
-			PARALLEL    "L4"           "Parameter6"           NEG  LINE   "L2"
-			PARALLEL    "L7"           "Parameter3"           NEG  LINE   "Zloc"
-			PARALLEL    "L8"           "Parameter4"           NEG  LINE   "L7"
-			PARALLEL    "L9"           "Parameter5"           NEG  LINE   "L8"
+			PARALLEL    "L1"           "P7_h"      POS  LINE   "Yloc"
+			PARALLEL    "L2"           "P7_h"      NEG  LINE   "Yloc"
+			PARALLEL    "L3"           "P6"           POS  LINE   "L1"
+			PARALLEL    "L4"           "P6"           NEG  LINE   "L2"
+			PARALLEL    "L7"           "P3"           NEG  LINE   "Zloc"
+			PARALLEL    "L8"           "P4"           NEG  LINE   "L7"
+			PARALLEL    "L9"           "P5"           NEG  LINE   "L8"
 			
 		CLINES END
 		

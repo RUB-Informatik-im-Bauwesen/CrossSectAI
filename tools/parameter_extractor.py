@@ -145,7 +145,7 @@ class ParameterExtractor:
         
 
 
-    def optimize(self, template, reference_polygon, record_iterations=False, **kwargs):
+    def optimize(self, template, reference_polygon: Polygon, record_iterations: bool = False, **kwargs):
         """
         Optimize template parameters to best fit a given reference polygon.
         The method performs global optimization using dual annealing. 

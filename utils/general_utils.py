@@ -6,12 +6,15 @@ from pycocotools import mask
 
 def binary_mask_to_rle_uncompressed(binary_mask: np.ndarray):
     """
-    Converts a 2D binary mask to run-length encoding (RLE).
-    Parameters:
-        binary_mask (np.ndarray): A 2D array of 0s and 1s.
+    Converts a 2D binary mask to uncompressed run-length encoding (RLE).
+
+    Args:
+        binary_mask (np.ndarray): A 2D NumPy array consisting of 0s and 1s.
 
     Returns:
-        dict: A dictionary with RLE 'counts' and original 'size'.
+        dict: A dictionary with the following keys:
+            - 'counts': A list of run-length encoded pixel counts.
+            - 'size': The original size of the mask as [height, width].
     """
    
     if len(binary_mask.shape) == 2:
@@ -32,6 +35,7 @@ def binary_mask_to_rle_uncompressed(binary_mask: np.ndarray):
 
 
 
+
 def binary_mask_to_rle_compressed(binary_mask: np.ndarray):
     """
     Converts a 2D binary mask to COCO-style run-length encoding (RLE).
@@ -40,7 +44,9 @@ def binary_mask_to_rle_compressed(binary_mask: np.ndarray):
         binary_mask (np.ndarray): A 2D array containing 0s and 1s.
 
     Returns:
-        dict: A dictionary with RLE 'counts' as a UTF-8 string and the original 'size'.
+        dict: A dictionary with the following keys:
+            - 'counts': RLE as a UTF-8 string 
+            - 'size': The original size of the mask as [height, width].
     """
     
     binary_mask = np.asfortranarray(binary_mask.astype(np.uint8))
@@ -53,8 +59,15 @@ def binary_mask_to_rle_compressed(binary_mask: np.ndarray):
 
 def write_allplan_parameter_file(output_dir: str, params: Sequence[float], template_type: int):
     """
-    Writes a TCL parameter file for Allplan using the provided template type and parameters.
-    Parameters at index 0 and 1 are skipped intentionally.
+    Writes a TCL parameter file for Allplan based on the given template type and parameter values.
+
+    Args:
+        output_dir (str): Directory where the parameter file will be saved.
+        params (Sequence[float]): List of parameter values. Offset parameters 1 and 2 are skipped.
+        template_type (int): Identifier for the type of cross-section template to be used in the TCL file.
+
+    Returns:
+        None
     """
 
     lines = [
@@ -73,18 +86,23 @@ def write_allplan_parameter_file(output_dir: str, params: Sequence[float], templ
     with open(str(output_path), "w") as file:
         file.write("\n".join(lines) + "\n")
 
+
+
+
 def create_coco_result_file():
     """
-    Creates an empty COCO-style result dictionary.
+    Creates an empty result dictionary following the COCO format.
 
     Returns:
-        dict: A dictionary with empty fields for images, annotations, and metadata 
-              in COCO format.
+        dict: A dictionary with the following top-level fields:
+            - 'info': Dictionary with general dataset metadata.
+            - 'license': List containing a single license entry.
+            - 'categories': List containing category definition.
+            - 'images': Empty list to store image metadata.
+            - 'annotation': Empty list to store annotation entries.
     """
 
     results = {
-        "images": [],
-        "annotation": [],
         "info": {
             "year": "", 
             "version": "", 
@@ -102,9 +120,12 @@ def create_coco_result_file():
             "id": 0, 
             "name": "bridge cross-section", 
             "supercategory": "infrastructure"
-        }]
+        }],
+        "images": [],
+        "annotation": [],
     }
 
     return results
 
 
+    

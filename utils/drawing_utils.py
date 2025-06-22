@@ -1,66 +1,48 @@
 from PIL import ImageColor
-from pathlib import Path
 import matplotlib.pyplot as plt
 import cv2
 import io
 import numpy as np
 
 
-def hex_to_bgr(color_hex):
+def hex_to_bgr(color_hex: str):
     """Convert a RGB hex color string to a BGR tuple.
 
     Args:
-        color_hex: RGB hex string (e.g., '#FF0000').
+        color_hex (str): Color as a hexadecimal RGB string (e.g., "#FF0000").
 
     Returns:
-        Tuple representing the BGR color.
+        Tuple: BGR color.
     """
     color_rgb = ImageColor.getrgb(color_hex)
 
     return color_rgb[::-1]
 
-def clone_image(img):
+def clone_image(img: np.array):
     """Return a copy of the input image.
 
     Args:
-        img: Input image.
+        img (np.ndarray): Input image array.
 
     Returns:
-        A copy of the input image.
+       np.ndarray: A copy of the input image.
     """
     return img.copy()
 
-def save_image(img, output_dir, filename):
-    """Save the image to the specified directory with the given filename.
+def draw_line(img: np.ndarray, line: list, color_hex: str, thickness: int = 30):
+    """
+    Draws a line on a copy of the input image using a specified color and thickness.
 
     Args:
-        img: Input image.
-        output_dir: Path to the output directory.
-        filename: Name of the output image file (e.g., "result.png").
+        img (np.ndarray): Input image array.
+        line (list): Coordinates of the line defined as [x0, y0, x1, y1].
+        color_hex (str): Color as a hexadecimal RGB string (e.g., "#FF0000").
+        thickness (int, optional): Line thickness in pixels (default: 30).
 
     Returns:
-        None.
+        np.ndarray: A copy of the input image with the specified line drawn on it.
     """
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
-
-    file_path = Path.joinpath(output_path, filename)
-    cv2.imwrite(str(file_path), img)
-
-
-def draw_line(img, line, color_hex, thickness=30):
-    """
-    Draws a line on a cloned copy of the input image using a specified color and thickness.
-    Args:
-        image: Input image.
-        line: The line to draw, specified by two endpoints (x0, y0) and (x1, y1).
-        color_hex: RGB hex string.
-        thickness: Border thickness in pixels.
-
-    Returns:
-        img: A new image with the specified line drawn.
-    """
-
+    
     output_image = clone_image(img)
     
     color_bgr = hex_to_bgr(color_hex)
@@ -72,18 +54,19 @@ def draw_line(img, line, color_hex, thickness=30):
     return output_image
 
 
-def draw_point(img, center, color_hex, radius=30, thickness=-1):
-    """Draw a point on a copy of the image.
+def draw_point(img: np.ndarray, center: tuple, color_hex: str, radius: int = 30, thickness: int = -1):
+    """
+    Draws a point on a copy of the input image.
 
-        Args:
-            img: Input image.
-            center: Coordinates of the point (x, y).
-            color_hex: BGR color as list, or RGB hex string. If empty, a random color is used.
-            radius: Radius of the point in pixels.
-            thickness: Border thickness in pixels. -1 fills the circle.
+    Args:
+        img (np.ndarray): Input image array.
+        center (tuple): Coordinates of the point as (x, y).
+        color_hex (str): Color as a hexadecimal RGB string (e.g., "#FF0000").
+        radius (int, optional): Radius of the point in pixels (default: 30).
+        thickness (int, optional): Thickness of the circle border in pixels. Use -1 to fill the circle (default: -1).
 
-        Returns:
-            Image with the point drawn.
+    Returns:
+        np.ndarray: A copy of the input image with the point drawn.
     """
 
     output_image = clone_image(img)
@@ -94,18 +77,19 @@ def draw_point(img, center, color_hex, radius=30, thickness=-1):
 
     return output_image
 
-def draw_bbox(img, bbox, color_hex, thickness=5, alpha=0.0):
-    """Draw a bounding box with optional fill and transparency on the image.
+def draw_bbox(img: np.ndarray, bbox: tuple, color_hex: str, thickness: int = 5, alpha: float = 0.0):
+    """
+    Draws a bounding box on the input image, with optional fill and transparency.
 
     Args:
-        image: Input image.
-        bbox: Bounding box in (x, y, width, height) format.
-        color_hex: RGB hex string.
-        thickness: Border thickness in pixels.
-        alpha: Transparency of the fill (0.0 = fully transparent, 1.0 = opaque).
+        img (np.ndarray): Input image array.
+        bbox (tuple): Bounding box defined as (x, y, width, height).
+        color_hex (str): Color as an RGB hex string (e.g., "#0000FF").
+        thickness (int, optional): Border thickness in pixels (default: 5).
+        alpha (float, optional): Transparency of the fill area (0.0 = fully transparent, 1.0 = opaque). Default is 0.0.
 
     Returns:
-        Image with the bounding box drawn.
+        np.ndarray: A copy of the input image with the bounding box drawn.
     """
     output_image = clone_image(img)
     overlay = clone_image(img)
@@ -126,17 +110,18 @@ def draw_bbox(img, bbox, color_hex, thickness=5, alpha=0.0):
     return output_image
 
 
-def draw_contours(img, contours, color_hex, thickness=30):
-    """Draw contours on a copy of the image.
+def draw_contours(img: np.ndarray, contours: list, color_hex: str, thickness: int = 30):
+    """
+    Draws contours on a copy of the input image.
 
     Args:
-        img: Input image.
-        contours: List of contours to draw.
-        color_hex: RGB hex string.
-        thickness: Thickness of the contour lines.
+        img (np.ndarray): Input image array.
+        contours (list): List of contours, where each contour is a NumPy array of points.
+        color_hex (str): Color as an RGB hex string (e.g., "#FFA500").
+        thickness (int, optional): Line thickness for drawing the contours (default: 30).
 
     Returns:
-        Image with contours drawn.
+        np.ndarray: A copy of the input image with contours drawn.
     """
     output_image = clone_image(img)
 
@@ -149,7 +134,32 @@ def draw_contours(img, contours, color_hex, thickness=30):
     return output_image
 
 
-def draw_polygon(img, polygon, color_hex, thickness=5, alpha=0.0, show_points=False, radius=3, pts_color_hex="#000000"):
+def draw_polygon(
+    img: np.ndarray,
+    polygon,
+    color_hex: str,
+    thickness: int = 5,
+    alpha: float = 0.0,
+    show_points: bool = False,
+    radius: int = 3,
+    pts_color_hex: str = "#000000"
+):
+    """
+    Draws a polygon on a copy of the input image, with optional fill transparency and point markers.
+
+    Args:
+        img (np.ndarray): Input image array.
+        polygon (shapely.geometry.Polygon): Polygon to be drawn.
+        color_hex (str): Color as an RGB hex string (e.g., "#00FF00").
+        thickness (int, optional): Thickness of the polygon outline in pixels (default: 5).
+        alpha (float, optional): Transparency of the filled area (0.0 = fully transparent, 1.0 = opaque). Default is 0.0.
+        show_points (bool, optional): If True, draws a circle at each polygon vertex (default: False).
+        radius (int, optional): Radius of the point markers (default: 3).
+        pts_color_hex (str, optional): Color of the point markers as an RGB hex string (default: "#000000").
+
+    Returns:
+        np.ndarray: A copy of the input image with the polygon drawn.
+    """
 
     output_image = clone_image(img)
     overlay = clone_image(img)
@@ -175,21 +185,22 @@ def draw_polygon(img, polygon, color_hex, thickness=5, alpha=0.0, show_points=Fa
 
     return output_image    
 
-def draw_text(img, text, position, color_hex, opts=None):
-    """Draw text on a copy of the image.
+def draw_text(img: np.ndarray, text: str, position: tuple, color_hex: str, opts: dict = None):
+    """
+    Draws text on a copy of the input image.
 
     Args:
-        img: Input image.
-        text: Text string to render.
-        position: Bottom-left corner of the text (x, y).
-        color_hex: RGB hex string.
-        opts: Optional dictionary with style settings:
-            - "font_scale": Float scaling factor for text size.
-            - "font_thickness": Line thickness (int).
-            - "font": OpenCV font constant (e.g., cv2.FONT_HERSHEY_SIMPLEX).
+        img (np.ndarray): Input image array.
+        text (str): Text string to render.
+        position (tuple): Bottom-left corner of the text as (x, y).
+        color_hex (str): Color as an RGB hex string (e.g., "#FFFFFF").
+        opts (dict, optional): Optional style settings. Supported keys include:
+            - "font_scale" (float): Scaling factor for text size.
+            - "font_thickness" (int): Line thickness of the text.
+            - "font" (int): OpenCV font constant (e.g., cv2.FONT_HERSHEY_SIMPLEX).
 
     Returns:
-        Image with the text drawn.
+        np.ndarray: A copy of the input image with the text drawn.
     """
 
     output_image = clone_image(img)
@@ -215,19 +226,26 @@ def draw_text(img, text, position, color_hex, opts=None):
 
     return output_image
 
-def draw_point_star(img, center, color_hex, marker_size=375, dpi=80, linewidth=1.25):    
-    """Visualize a point as a star marker and save the result as an image.
+def draw_point_star(
+    img: np.ndarray, 
+    center: tuple, 
+    color_hex: str, 
+    marker_size: int = 375, 
+    dpi: int = 80, 
+    linewidth: float = 1.25):
+    """
+    Visualizes a point as a star marker and returns the resulting image.
 
     Args:
-        img: Input image.
-        point: (x, y) coordinate of the point to visualize.
-        color_hex: RGB hex string for the star color.
-        marker_size: Size of the star marker.
-        dpi: Resolution of the saved figure.
-        linewidth: Edge line thickness of the star marker.
+        img (np.ndarray): Input image array.
+        center (tuple): Coordinates of the point as (x, y).
+        color_hex (str): Color specified as an RGB hex string (e.g., "#FFD700").
+        marker_size (int, optional): Size of the star marker (default: 375).
+        dpi (int, optional): Resolution of the rendered figure in dots per inch (default: 80).
+        linewidth (float, optional): Thickness of the star's edge line (default: 1.25).
 
     Returns:
-        Image with the star marker.
+        np.ndarray: A copy of the input image with the star marker drawn.
     """
     color_rgb = hex_to_bgr(color_hex)[::-1]
     color_rgb = [c/255 for c in color_rgb]
@@ -261,16 +279,18 @@ def draw_point_star(img, center, color_hex, marker_size=375, dpi=80, linewidth=1
     return img_bgr
 
 
-def draw_mask(img, mask, color_hex, alpha=1):
-    """Draw a binary mask on a copy of the image using a specified color.
+def draw_mask(img: np.ndarray, mask: np.ndarray, color_hex: str, alpha: float = 1.0):
+    """
+    Draws a binary mask as a colored overlay on a copy of the input image.
 
     Args:
-        img: Input image.
-        mask: Binary mask (2D array) to be drawn.
-        color_hex: RGB hex string for the mask color.
-        alpha: Opacity of the mask overlay (0 = opaque, 1 = transparent).
+        img (np.ndarray): Input image array.
+        mask (np.ndarray): Binary mask as a 2D array, where nonzero values indicate the masked region.
+        color_hex (str): Color specified as an RGB hex string (e.g., "#00FF00").
+        alpha (float, optional): Transparency of the mask overlay (0 = fully opaque, 1 = fully transparent). Default is 1.0.
+
     Returns:
-        Image with the mask overlay rendered and returned as a NumPy array.
+        np.ndarray: A copy of the input image with the colored mask overlay applied.
     """
 
     color_bgr = np.array(hex_to_bgr(color_hex), dtype=np.uint8)

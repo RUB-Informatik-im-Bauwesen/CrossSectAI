@@ -1,6 +1,6 @@
 import math
 from typing import Sequence
-
+from shapely import Polygon
 
 class BaseTemplate():
       """
@@ -33,9 +33,12 @@ class BaseTemplate():
                   bounds.append([lower, upper])
             return bounds
 
-      def find_edge_lines(self):
+      def find_edge_lines(self, polygon: Polygon):
             """
             Finds and sorts nearly horizontal and vertical edges of the polygon.
+            
+            Args:
+                  polygon (shapely.geometry.Polygon): Input polygon to analyze.
 
             Returns:
                   None: Stores the sorted lines in instance variables:
@@ -43,6 +46,7 @@ class BaseTemplate():
                         - sorted_left_to_right_vertical_lines
             """
             horizontal_lines = self.find_lines_with_angle(
+                  polygon,
                   target_angle=0, 
                   angle_tolerance=self.horizontal_angle_threshold
             )
@@ -52,6 +56,7 @@ class BaseTemplate():
             )
 
             vertical_lines = self.find_lines_with_angle(
+                  polygon,
                   target_angle=90, 
                   angle_tolerance=self.vertical_angle_threshold
             )
@@ -60,24 +65,23 @@ class BaseTemplate():
                   key=lambda line: min(line[0][0], line[1][0])
             )
             
-      # TODO:
-      # Was mit dem polygon_gt
-      def find_lines_with_angle(self, target_angle, angle_tolerance):
+            
+      def find_lines_with_angle(self, polygon: Polygon, target_angle: float, angle_tolerance: float):
             """
-            Identifies lines in the polygon that match a target angle.
+            Identifies edges in the polygon whose orientation matches a target angle within a given tolerance.
 
             Args:
+                  polygon (shapely.geometry.Polygon): Input polygon to analyze.
                   target_angle (float): Desired angle in degrees relative to the horizontal axis.
+                  angle_tolerance (float): Allowed deviation from the target angle in degrees.
 
             Returns:
-                  list: A list of lines, each represented by two endpoints [[x0, y0], [x1, y1]].
+                  list: A list of lines matching the target orientation, each represented as [[x0, y0], [x1, y1]].
             """
             
-            coords = list(self.polygon_gt.exterior.coords)
+            coords = list(polygon.exterior.coords)
             lines = []
 
-            
-            
             for (x0, y0), (x1, y1) in zip(coords, coords[1:]):
                   if self.lineLength((x0, y0), (x1, y1)) < self.min_line_length:
                         continue

@@ -1,5 +1,6 @@
 import yaml
 import argparse
+import csv
 
 from tools.cross_section_detector import CrossSectionDetector
 from tools.mask_generator import MaskGenerator
@@ -42,8 +43,7 @@ if __name__ == "__main__":
 
     DRAW_RESULTS = args.draw_results
     SAVE_COCO = args.save_coco
-
-
+    
 
     if input_path.is_file():
         if input_path.suffix.lower() == ".png":
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     if DRAW_RESULTS:
         result_image_folder = Path.joinpath(output_dir, "Results")
         result_image_folder.mkdir(parents=True, exist_ok=True)
-
+        
 
 
     with open(str(config_file), 'r') as config_file:
@@ -106,12 +106,33 @@ if __name__ == "__main__":
         case 2:
             from templates.tapered_t_girder_template import TaperedTGirderTemplate
             template = TaperedTGirderTemplate()
+  
 
     
     if SAVE_COCO:
         coco_results = general_utils.create_coco_result_file()
         img_counter = 0
         annotation_counter = 0
+        
+        
+    csv_header = [
+        "Bbox_x0",
+        "Bbox_y0",
+        "Bbox_x1",
+        "Bbox_y1",
+        "template_type",
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+        "P8"
+    ]
+    
+    
+    allplan_script_written = False
         
     
     for img_path in tqdm(image_paths):
@@ -125,7 +146,10 @@ if __name__ == "__main__":
             result_image_final_polygon = drawing_utils.clone_image(img)
 
 
-       
+        csv_result_file = []
+        csv_result_file.append(csv_header)
+        
+        
         detection_results = cross_section_detector.predict(
             source=img,
             conf=config["CrossSectionDetector"]["conf"],
@@ -138,7 +162,6 @@ if __name__ == "__main__":
 
         
         if len(detection_results[0].boxes) == 0:
-            #print(f"Warning! No Cross-Section detected in image {img_path.name}")
             continue
 
         mask_generator.set_image(img)
@@ -187,6 +210,53 @@ if __name__ == "__main__":
                 reference_polygon, 
                 maxiter=config["ParameterOptimizer"]["maxiter"], 
                 initial_temp=config["ParameterOptimizer"]["initial_temp"])
+            
+            match template_type:
+                case 0:
+                    P1 = final_parameters[0]
+                    P2 = final_parameters[1]
+                    P3 = final_parameters[2]
+                    P4 = final_parameters[3]
+                    P5 = 0
+                    P6 = final_parameters[4]
+                    P7 = final_parameters[5]
+                    P8 = 0
+                case 1:
+                    P1 = final_parameters[0]
+                    P2 = final_parameters[1]
+                    P3 = final_parameters[2]
+                    P4 = final_parameters[3]
+                    P5 = final_parameters[4]
+                    P6 = final_parameters[5]
+                    P7 = final_parameters[6]
+                    P8 = 0
+                case 2:
+                    P1 = final_parameters[0]
+                    P2 = final_parameters[1]
+                    P3 = final_parameters[2]
+                    P4 = final_parameters[3]
+                    P5 = final_parameters[4]
+                    P6 = final_parameters[5]
+                    P7 = final_parameters[6]
+                    P8 = final_parameters[7]
+                    
+            
+
+            csv_result_file.append(
+                [
+                    round(x0, 4), round(y0,4), round(x1,4), round(y1,4),
+                    template_type,
+                    round(P1, 4), round(P2, 4), round(P3, 4), round(P4, 4),
+                    round(P5, 4), round(P6, 4), round(P7, 4), round(P8, 4)
+                ]
+            )
+            
+            
+            # Currently, only the first cross-section is exported to the Allplan Bridge script
+            if allplan_script_written == False:
+                general_utils.write_allplan_parameter_file(output_dir, [P1, P2, P3, P4, P5, P6, P7, P8], template_type)
+                allplan_script_written = True
+            
             
            
        
@@ -249,6 +319,10 @@ if __name__ == "__main__":
             cv2.imwrite(str(img_filepath_final_polygon), result_image_final_polygon)
             
             
+        csv_filepath = Path.joinpath(output_dir, f"{img_path.stem}.csv")
+        with open(str(csv_filepath), 'w') as fw:
+            writer = csv.writer(fw, delimiter=';')
+            writer.writerows(csv_result_file)
             
     if SAVE_COCO:
         import json
@@ -259,3 +333,4 @@ if __name__ == "__main__":
         
 
         
+    

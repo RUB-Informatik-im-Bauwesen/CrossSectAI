@@ -4,7 +4,7 @@
 #-------------------------------------------------------------------------------
 
 # Directory where the template scripts and variable file are located
-set base_dir "C:/Users/Benedikt/Desktop/Allplan_Scripts/"
+set base_dir "YOUR-PATH-GOES-HERE"
 
 
 # Load the variables
