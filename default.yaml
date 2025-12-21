@@ -1,17 +1,17 @@
 # Global configuration with settings and hyperparameters for prediction only.
 
 General:
-  bbox_color: "#17365C"            # (str) Color hex code for bounding box visualization
-  mask_color: "#5C1D17"            # (str) Color hex code for mask visualization
-  polygon_color: "#17365C"         # (str) Color hex code for initial polygon visualization
-  final_polygon_color: "#D2DBA4"   # (str) Color hex code for final polygon visualization
+  bbox_color: "#17365C"               # (str) Color hex code for bounding box visualization
+  mask_color: "#5C1D17"               # (str) Color hex code for mask visualization
+  polygon_color: "#17365C"            # (str) Color hex code for initial polygon visualization
+  final_polygon_color: "#D2DBA4"      # (str) Color hex code for final polygon visualization
 
 CrossSectionDetector:
-  model: "weights/yolov8m.pt"      # (str) Path to the YOLO model weights file
-  device: "cuda:0"                 # (str) Computing device ('cuda:X' or 'cpu')
-  iou: 0.7                         # (float) Intersection over Union threshold for NMS
-  conf: 0.25                       # (float) Object confidence threshold for detection (default: 0.25)
-  imgsz: 640                       # (int) Input image size (pixels)
+  model: "weights/yolov8m_multi.pt"   # (str) Path to the YOLO model weights file
+  device: "cuda:0"                    # (str) Computing device ('cuda:X' or 'cpu')
+  iou: 0.7                            # (float) Intersection over Union threshold for NMS
+  conf: 0.25                          # (float) Object confidence threshold for detection (default: 0.25)
+  imgsz: 1024                         # (int) Input image size (pixels)
 
 MaskGenerator:
   sam_chkpt: "weights/sam_vit_h.pth"  # (str) Path to the SAM model checkpoint file

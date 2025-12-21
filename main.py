@@ -28,9 +28,6 @@ if __name__ == "__main__":
                         help="Draw and save intermediate results (default: False).")
     parser.add_argument("--save-coco", action="store_true",
                         help="Save detections and segmentations in COCO format (default: False).")
-    parser.add_argument("--template-type", type=int, choices=[0, 1, 2], default=2,
-                        help="Template type: 0 = Slab Girder, 1 = T-Girder, 2 = Tapered T-Girder (default: 2).")
-    
 
 
     args = parser.parse_args()
@@ -39,7 +36,6 @@ if __name__ == "__main__":
     output_dir = args.output
     config_file = args.config
 
-    template_type = args.template_type
 
     DRAW_RESULTS = args.draw_results
     SAVE_COCO = args.save_coco
@@ -94,18 +90,9 @@ if __name__ == "__main__":
     )
 
 
-    # Load templates
+    
 
-    match template_type:
-        case 0:
-            from templates.slab_template import SlabTemplate
-            template = SlabTemplate()
-        case 1:
-            from templates.t_girder_template import TGirderTemplate
-            template = TGirderTemplate()
-        case 2:
-            from templates.tapered_t_girder_template import TaperedTGirderTemplate
-            template = TaperedTGirderTemplate()
+    
   
 
     
@@ -120,7 +107,7 @@ if __name__ == "__main__":
         "Bbox_y0",
         "Bbox_x1",
         "Bbox_y1",
-        "template_type",
+        "template_class_id",
         "P1",
         "P2",
         "P3",
@@ -159,8 +146,7 @@ if __name__ == "__main__":
         )        
 
 
-
-        
+                
         if len(detection_results[0].boxes) == 0:
             continue
 
@@ -169,10 +155,12 @@ if __name__ == "__main__":
         
         
         for box in detection_results[0].boxes:
+            template_class_id = int(box.cls.cpu().tolist()[0])
+
             x0, y0, x1, y1 = box.xyxy.cpu().tolist()[0]
             bbox = [x0, y0, x1-x0, y1-y0]
 
-        
+            
                         
             masks, scores, logits = mask_generator.predict(
                 box=np.array([x0, y0, x1, y1]),
@@ -181,7 +169,6 @@ if __name__ == "__main__":
 
             bi_mask = masks[0]
 
-                        
 
             if SAVE_COCO:
                 rle = general_utils.binary_mask_to_rle_compressed(bi_mask)
@@ -200,6 +187,17 @@ if __name__ == "__main__":
                 
                 annotation_counter += 1
 
+            # Load templates
+            match template_class_id:
+                case 0:
+                    from templates.slab_template import SlabTemplate
+                    template = SlabTemplate()
+                case 1:
+                    from templates.t_girder_template import TGirderTemplate
+                    template = TGirderTemplate()
+                case 2:
+                    from templates.tapered_t_girder_template import TaperedTGirderTemplate
+                    template = TaperedTGirderTemplate()
 
             reference_polygon = polygon_simplifier.simplify(bi_mask)          
     
@@ -211,7 +209,7 @@ if __name__ == "__main__":
                 maxiter=config["ParameterOptimizer"]["maxiter"], 
                 initial_temp=config["ParameterOptimizer"]["initial_temp"])
             
-            match template_type:
+            match template_class_id:
                 case 0:
                     P1 = final_parameters[0]
                     P2 = final_parameters[1]
@@ -245,7 +243,7 @@ if __name__ == "__main__":
             csv_result_file.append(
                 [
                     round(x0, 4), round(y0,4), round(x1,4), round(y1,4),
-                    template_type,
+                    template_class_id,
                     round(P1, 4), round(P2, 4), round(P3, 4), round(P4, 4),
                     round(P5, 4), round(P6, 4), round(P7, 4), round(P8, 4)
                 ]
@@ -254,7 +252,7 @@ if __name__ == "__main__":
             
             # Currently, only the first cross-section is exported to the Allplan Bridge script
             if allplan_script_written == False:
-                general_utils.write_allplan_parameter_file(output_dir, [P1, P2, P3, P4, P5, P6, P7, P8], template_type)
+                general_utils.write_allplan_parameter_file(output_dir, [P1, P2, P3, P4, P5, P6, P7, P8], template_class_id)
                 allplan_script_written = True
             
             
@@ -266,6 +264,13 @@ if __name__ == "__main__":
                     bbox,
                     color_hex=config["General"]["bbox_color"],
                     alpha=0.5
+                )
+
+                result_image_bbox = drawing_utils.draw_text(
+                    result_image_bbox, 
+                    str(template_class_id),
+                    (int(bbox[0]), int(bbox[1])),
+                    color_hex=config["General"]["bbox_color"],
                 )
                 
                 result_image_mask = drawing_utils.draw_mask(

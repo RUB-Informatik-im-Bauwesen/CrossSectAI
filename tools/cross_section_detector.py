@@ -12,8 +12,8 @@ class CrossSectionDetector(YOLO):
     Args:
         weight_path (str): File path to the pre-trained YOLO model weights.
     """
-    def __init__(self, weight_path: str):
-        super().__init__(model=weight_path)
+    def __init__(self, weight_path: str, *args, **kwargs):
+        super().__init__(model=weight_path, *args, **kwargs)
 
 
     

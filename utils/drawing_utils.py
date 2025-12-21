@@ -219,7 +219,7 @@ def draw_text(img: np.ndarray, text: str, position: tuple, color_hex: str, opts:
     # Adjust Y to account for descenders
     adjusted_pos = (
         position[0],
-        position[1] - baseline
+        position[1] - baseline - text_height
     )
 
     cv2.putText(output_image, text, adjusted_pos, font, font_scale, color_bgr, thickness, cv2.LINE_AA)
