@@ -5,7 +5,6 @@ import time
 from datetime import datetime, timezone
 import numpy as np
 from itertools import groupby
-from pycocotools import mask
 from shapely import affinity
 from shapely.geometry import Polygon, mapping
 
@@ -47,34 +46,15 @@ def binary_mask_to_rle_uncompressed(binary_mask: np.ndarray):
 
 
 
-def binary_mask_to_rle_compressed(binary_mask: np.ndarray):
-    """
-    Converts a 2D binary mask to COCO-style run-length encoding (RLE).
-
-    Args:
-        binary_mask (np.ndarray): A 2D array containing 0s and 1s.
-
-    Returns:
-        dict: A dictionary with the following keys:
-            - 'counts': RLE as a UTF-8 string 
-            - 'size': The original size of the mask as [height, width].
-    """
-    
-    binary_mask = np.asfortranarray(binary_mask.astype(np.uint8))
-    
-    rle = mask.encode(binary_mask)  
-    rle["counts"] = rle["counts"].decode("utf-8")
-
-    return rle
-
-
 def polygon_to_geojson_feature(polygon: Polygon, template_type: int, color: str, feature_index: int):
     """
     Converts a fitted cross-section polygon into a GeoJSON Polygon Feature.
 
     Coordinates are kept in raw image-pixel units (no scale factor applied) and are
     translated so that the polygon's own bounding-box center maps to (0, 0), rather than
-    being left relative to the image's top-left corner.
+    being left relative to the image's top-left corner. The absolute image-pixel location
+    of that center is stored on `properties.center`, so the polygon can be translated back
+    onto the source image.
 
     Args:
         polygon (Polygon): Shapely polygon in image-pixel coordinates.
@@ -109,6 +89,7 @@ def polygon_to_geojson_feature(polygon: Polygon, template_type: int, color: str,
             "name": TEMPLATE_TYPE_NAMES.get(template_type),
             "color": color,
             "created_at": created_at,
+            "center": [int(round(center_x)), int(round(center_y))],
         },
     }
 
@@ -135,47 +116,5 @@ def write_geojson_file(output_dir: str, image_stem: str, features: Sequence[dict
 
     with open(str(output_path), "w") as file:
         json.dump(feature_collection, file, indent=2)
-
-
-
-
-def create_coco_result_file():
-    """
-    Creates an empty result dictionary following the COCO format.
-
-    Returns:
-        dict: A dictionary with the following top-level fields:
-            - 'info': Dictionary with general dataset metadata.
-            - 'license': List containing a single license entry.
-            - 'categories': List containing category definition.
-            - 'images': Empty list to store image metadata.
-            - 'annotation': Empty list to store annotation entries.
-    """
-
-    results = {
-        "info": {
-            "year": "", 
-            "version": "", 
-            "description": "", 
-            "contributor": "", 
-            "url": "", 
-            "date_created": "",
-        },
-        "license": [{
-            "id": 0, 
-            "name": "", 
-            "url": "",
-        }],
-        "categories": [{
-            "id": 0, 
-            "name": "bridge cross-section", 
-            "supercategory": "infrastructure"
-        }],
-        "images": [],
-        "annotation": [],
-    }
-
-    return results
-
 
     
