@@ -33,11 +33,10 @@ Ensure that the correct paths to the model weights are set in the configuration 
 You can use CrossSectAI directly from the Command Line Interface:
 
 ```bash
-pipenv run python main.py -i <input_path> -o <output_dir> [OPTIONS]
+pipenv run python main.py -i <input_path> -o <output_dir> [-c <config_path>]
 ```
 
-The command supports various modes, accepting arguments:
-
+The command accepts the following arguments:
 
 - `-i`, `--input`   **(required)** Path to a PNG image or a folder containing PNG images.
 
@@ -45,38 +44,21 @@ The command supports various modes, accepting arguments:
 
 - `-c`, `--config`  Path to the YAML configuration file. Defaults to `default.yaml`.
 
-- `--draw-results`  If set, draws and saves intermediate visualizations such as bounding boxes, masks, and polygons.
-
-- `--save-coco`     If set, saves detection and segmentation results in COCO format.
-
-- `--template-type`  Selects the cross-section template: `0` = Slab Girder, `1` = T-Girder, `2` = Tapered T-Girder (default).
-
 
 ### Example
 
 To run the included example, execute the following command from the project root:
 
 ```bash
-pipenv run python main.py -i examples/img.png -o ./ --draw-results --save-coco
+pipenv run python main.py -i examples/img.png -o ./
 ```
 
 </details>
 
 
-### Allplan Bridge
+### GeoJSON export
 
-To use the provided TCL scripts in Allplan Bridge:
-
-1. Copy all required files into a single directory. This includes:
-   - `variables.tcl`
-   - The relevant cross-section script(s)
-   - The main bridge script
-
-2. In the main bridge script, set the `base_dir` variable to the path of this directory.
-
-Allplan Bridge will sequentially load the referenced files and generate the bridge superstructure accordingly.
-
-> **Note:** After importing the scripts in Allplan Bridge, it may be necessary to trigger a recalculation to finalize the geometry.
+For each processed image, a `<image_stem>.geojson` file is written to the output directory — this is the only output the pipeline produces. It contains a `FeatureCollection` of `Polygon` features, one per detected cross-section, in image-pixel coordinates. Each polygon's coordinates are centered on that polygon's own bounding-box center (i.e. translated so the box center maps to `(0, 0)`), rather than being left relative to the image's top-left corner. Each feature's `properties` include an `id`, the template `name` (e.g. `"Slab Girder"`), the fitted-polygon `color` (from `default.yaml`), the absolute image-pixel `center` the polygon's coordinates are relative to, and a `created_at` timestamp.
 
 
 
