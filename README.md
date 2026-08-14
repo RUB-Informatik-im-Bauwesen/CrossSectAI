@@ -63,20 +63,9 @@ pipenv run python main.py -i examples/img.png -o ./ --draw-results --save-coco
 </details>
 
 
-### Allplan Bridge
+### GeoJSON export
 
-To use the provided TCL scripts in Allplan Bridge:
-
-1. Copy all required files into a single directory. This includes:
-   - `variables.tcl`
-   - The relevant cross-section script(s)
-   - The main bridge script
-
-2. In the main bridge script, set the `base_dir` variable to the path of this directory.
-
-Allplan Bridge will sequentially load the referenced files and generate the bridge superstructure accordingly.
-
-> **Note:** After importing the scripts in Allplan Bridge, it may be necessary to trigger a recalculation to finalize the geometry.
+For each processed image, a `<image_stem>.geojson` file is written to the output directory. It contains a `FeatureCollection` of `Polygon` features, one per detected cross-section, in image-pixel coordinates. Each polygon's coordinates are centered on that polygon's own bounding-box center (i.e. translated so the box center maps to `(0, 0)`), rather than being left relative to the image's top-left corner. Each feature's `properties` include an `id`, the template `name` (e.g. `"Slab Girder"`), the fitted-polygon `color` (from `default.yaml`), and a `created_at` timestamp.
 
 
 

@@ -119,9 +119,6 @@ if __name__ == "__main__":
     ]
     
     
-    allplan_script_written = False
-        
-    
     for img_path in tqdm(image_paths):
         img = cv2.imread(str(img_path))
         img_height, img_width, _ = img.shape
@@ -135,6 +132,8 @@ if __name__ == "__main__":
 
         csv_result_file = []
         csv_result_file.append(csv_header)
+
+        geojson_features = []
         
         
         detection_results = cross_section_detector.predict(
@@ -204,11 +203,13 @@ if __name__ == "__main__":
             initial_parameters = template.estimate_initial_parameters_simple(reference_polygon)
 
             final_parameters = parameter_extractor.optimize(
-                template, 
-                reference_polygon, 
-                maxiter=config["ParameterOptimizer"]["maxiter"], 
+                template,
+                reference_polygon,
+                maxiter=config["ParameterOptimizer"]["maxiter"],
                 initial_temp=config["ParameterOptimizer"]["initial_temp"])
-            
+
+            final_polygon = template.__class__.make_polygon_from_params(final_parameters)
+
             match template_class_id:
                 case 0:
                     P1 = final_parameters[0]
@@ -250,14 +251,15 @@ if __name__ == "__main__":
             )
             
             
-            # Currently, only the first cross-section is exported to the Allplan Bridge script
-            if allplan_script_written == False:
-                general_utils.write_allplan_parameter_file(output_dir, [P1, P2, P3, P4, P5, P6, P7, P8], template_class_id)
-                allplan_script_written = True
-            
-            
-           
-       
+            geojson_features.append(
+                general_utils.polygon_to_geojson_feature(
+                    final_polygon,
+                    template_class_id,
+                    config["General"]["final_polygon_color"],
+                    feature_index=len(geojson_features),
+                )
+            )
+
             if DRAW_RESULTS:
                 result_image_bbox = drawing_utils.draw_bbox(
                     result_image_bbox, 
@@ -287,7 +289,6 @@ if __name__ == "__main__":
                     alpha=0.5
                 )
                 
-                final_polygon = template.__class__.make_polygon_from_params(final_parameters)
                 result_image_final_polygon = drawing_utils.draw_polygon(
                     result_image_final_polygon, 
                     final_polygon,
@@ -328,7 +329,9 @@ if __name__ == "__main__":
         with open(str(csv_filepath), 'w') as fw:
             writer = csv.writer(fw, delimiter=';')
             writer.writerows(csv_result_file)
-            
+
+        general_utils.write_geojson_file(output_dir, img_path.stem, geojson_features)
+
     if SAVE_COCO:
         import json
         

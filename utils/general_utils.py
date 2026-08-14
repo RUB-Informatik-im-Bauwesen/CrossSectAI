@@ -1,8 +1,19 @@
 from typing import Sequence
 from pathlib import Path
+import json
+import time
+from datetime import datetime, timezone
 import numpy as np
 from itertools import groupby
 from pycocotools import mask
+from shapely import affinity
+from shapely.geometry import Polygon, mapping
+
+TEMPLATE_TYPE_NAMES = {
+    0: "Slab Girder",
+    1: "T-Girder",
+    2: "Tapered T-Girder",
+}
 
 def binary_mask_to_rle_uncompressed(binary_mask: np.ndarray):
     """
@@ -57,34 +68,73 @@ def binary_mask_to_rle_compressed(binary_mask: np.ndarray):
     return rle
 
 
-def write_allplan_parameter_file(output_dir: str, params: Sequence[float], template_type: int):
+def polygon_to_geojson_feature(polygon: Polygon, template_type: int, color: str, feature_index: int):
     """
-    Writes a TCL parameter file for Allplan based on the given template type and parameter values.
+    Converts a fitted cross-section polygon into a GeoJSON Polygon Feature.
+
+    Coordinates are kept in raw image-pixel units (no scale factor applied) and are
+    translated so that the polygon's own bounding-box center maps to (0, 0), rather than
+    being left relative to the image's top-left corner.
 
     Args:
-        output_dir (str): Directory where the parameter file will be saved.
-        params (Sequence[float]): List of parameter values. Offset parameters 1 and 2 are skipped.
-        template_type (int): Identifier for the type of cross-section template to be used in the TCL file.
+        polygon (Polygon): Shapely polygon in image-pixel coordinates.
+        template_type (int): Identifier for the type of cross-section template.
+        color (str): Hex color code to store on the feature's properties.
+        feature_index (int): Index of this feature among the features generated for the
+            current image, used to keep generated ids unique.
+
+    Returns:
+        dict: A GeoJSON Feature with a Polygon geometry.
+    """
+
+    min_x, min_y, max_x, max_y = polygon.bounds
+    center_x = (min_x + max_x) / 2
+    center_y = (min_y + max_y) / 2
+
+    centered_polygon = affinity.translate(polygon, xoff=-center_x, yoff=-center_y)
+
+    geometry = mapping(centered_polygon)
+    geometry["coordinates"] = [
+        [[int(round(x)), int(round(y))] for x, y in ring]
+        for ring in geometry["coordinates"]
+    ]
+
+    created_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+    return {
+        "type": "Feature",
+        "geometry": geometry,
+        "properties": {
+            "id": f"polygon-{int(time.time() * 1000)}-{feature_index}",
+            "name": TEMPLATE_TYPE_NAMES.get(template_type),
+            "color": color,
+            "created_at": created_at,
+        },
+    }
+
+
+def write_geojson_file(output_dir: str, image_stem: str, features: Sequence[dict]):
+    """
+    Writes a GeoJSON FeatureCollection file containing the given Polygon features.
+
+    Args:
+        output_dir (str): Directory where the GeoJSON file will be saved.
+        image_stem (str): Stem of the source image filename, used to name the output file.
+        features (Sequence[dict]): GeoJSON Feature dicts, e.g. from `polygon_to_geojson_feature`.
 
     Returns:
         None
     """
 
-    lines = [
-        "# Define template and parameters",
-        "# Template types: 0 = Slab Girder, 1 = T-Girder, 2 = Tapered T-Girder",
-        f"set template_type {template_type}",
-        "# Parameter values"
-    ]
-    
-    for i in range(2, len(params)):
-        value = float(params[i])
-        lines.append(f"set P{i} {value}")
+    feature_collection = {
+        "type": "FeatureCollection",
+        "features": list(features),
+    }
 
-    output_path = Path.joinpath(Path(output_dir), "variables.tcl")
+    output_path = Path.joinpath(Path(output_dir), f"{image_stem}.geojson")
 
     with open(str(output_path), "w") as file:
-        file.write("\n".join(lines) + "\n")
+        json.dump(feature_collection, file, indent=2)
 
 
 
